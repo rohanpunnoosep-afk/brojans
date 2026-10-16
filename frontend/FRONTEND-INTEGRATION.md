@@ -1,48 +1,51 @@
-# Frontend integration
+# TANDEM frontend integration
 
-`frontend/` is the canonical TANDEM Vite/React application in this repository. Its happy-path UI simulates buyer, seller, and middleman messages using the shapes defined in [`../json_formats.md`](../json_formats.md). No service or model API is connected by the frontend. The two workspaces share a local browser session, not a hosted database.
+TANDEM is an agent-to-agent marketplace. Clothing is the first implemented vertical; menswear loungewear is the presentation scenario. Buyer styles, selected looks, location, occasions, sizes, fit, target price, and maximum budget are editable inputs. The $150 target and $200 maximum are initial presentation defaults, not fixed negotiation outcomes. The target can be cleared. Other marketplace verticals are outside the current frontend/backend contract.
 
-## Deployment configurations
+`frontend/` is the canonical TANDEM Vite/React application. It consumes the existing FastAPI middleman API in `../api/index.py`; the backend drives both agents and persists negotiation stages. The frontend's local session coordinates the buyer and seller views and records human feedback. These are separate kinds of state.
 
-| File | Intended use |
+## Deployment and origins
+
+| Configuration | Role |
 | --- | --- |
-| `frontend/vercel.json` | Current frontend deployment: set Vercel Root Directory to `frontend`, run `npm run build`, serve `dist/`. No Python function declaration. |
-| `frontend/deployment/vercel.integrated.json` | Template for the combined repository when `api/index.py` and its backend dependencies are present. |
+| Repository root `vercel.json` | Active integrated configuration. Installs and builds `frontend/`, serves `frontend/dist`, deploys `api/index.py`, and rewrites `/api/*` to that function. Use the repository root as the Vercel Root Directory. |
+| `frontend/vercel.json` | Separate frontend-only preview. It does not include or route to the sibling Python API. Do not select `frontend` as the root for the integrated deployment. |
+| `frontend/deployment/vercel.integrated.json` | Archived reference for the combined configuration, not an additional active Vercel configuration. The repository root file is authoritative. |
 
-For a future combined deployment, merge the template into the repository's root `vercel.json`. It installs and builds the app from `frontend/` and serves `frontend/dist/`. Vercel will not automatically read the nested template. Keep any additional backend settings required by that repository. The current frontend addition does not change that existing root configuration.
+The root configuration already retains the Python function's 300-second maximum duration and excludes `/api`, assets, images, and the favicon from the SPA fallback. The frontend does not need to modify root or backend configuration for the existing same-origin routing.
 
-The template retains the existing `/api/(.*)` → `/api/index` rewrite and `api/index.py` maximum duration of 300 seconds. It adds the Vite build/output settings and a frontend fallback that excludes `/api`, `/assets/`, `/images/`, and the favicon. API requests must reach the backend rather than return frontend HTML. Do not use this template as the standalone checkout's root configuration while the Python function is absent.
+The browser uses relative `/api` URLs for fetch and SSE. In local development, `vite.config.ts` proxies `/api` to `TANDEM_BACKEND_URL`, defaulting to `http://127.0.0.1:8000`. It preserves the full path and sets `changeOrigin: true`. Copy `.env.example` to `.env.local` in `frontend/` to override the target with a backend origin; restart Vite after a change. The proxy requires a running, configured backend and does not launch one. Vite's production build and `vite preview` do not provide this development proxy.
 
-The combined-deployment template is inactive. Its presence does not establish a working API connection or a deployed backend.
+`TANDEM_BACKEND_URL` is loaded only in the Vite server configuration and is not exposed as a `VITE_*` client variable. No OpenAI or database credential belongs in frontend source or client environment variables. The existing API has no CORS middleware; routing through the local proxy or integrated Vercel origin avoids cross-origin browser requests. A standalone frontend deployment would need a separately configured server-side proxy or backend CORS support.
 
-## Connection points
+## Current API
 
-- `src/data/inventory.json` is the canonical seeded seller catalog, with one record per size-specific SKU. Its fields match the inventory schema exactly: `sku`, `name`, `category`, `color`, `material`, `size`, `price`, `stock`, and `image`.
-- `src/data/product-meta.json` holds presentation metadata separately, including style and fit tags. This metadata is not part of the inventory message schema.
-- `src/contracts.ts` represents the repository's JSON message contract in TypeScript.
-- `src/catalog.ts` resolves inventory image filenames for frontend display, adapts catalog data, and provides the local demo generation and scoring helpers.
-- `src/store.ts` owns the shared session, serialized exchange state, `localStorage`, and `BroadcastChannel` synchronization.
-- `src/main.tsx` owns onboarding, progress, the five-bundle report, ratings and analysis presentation, and the final-offer decision UI.
+| Endpoint | Frontend use |
+| --- | --- |
+| `GET /api/health` | Check backend availability. |
+| `POST /api/negotiations` | Send `{buyer_input, brief?}`; receive `{id, stream_url}`. |
+| `GET /api/negotiations/{id}/stream` | Consume SSE history and live stage updates; opening the stream runs or resumes the negotiation. Resume with `?after=` or `Last-Event-ID`. |
+| `GET /api/negotiations/{id}` | Restore the negotiation snapshot, rounds, judgments, heat, analysis, final offer, and agent decision. |
+| `POST /api/negotiations/{id}/retry` | Re-arm a failed negotiation, then reopen its stream. This is not a new negotiation. |
 
-The `image` field remains a filename in inventory and messages. Bundle `images` follow the order of their `skus`. Resolve filenames to frontend assets at the display boundary rather than replacing the wire fields with URLs. Each size is an individual SKU; do not reconstruct a product with a sizes array in the API payload.
+SSE event types are `brief`, `check`, `bundles_proposed`, `ratings`, `heat`, `analysis`, `final_offer`, `decision`, `done`, and `error`. Each event's JSON envelope contains `id`, `type`, `payload`, and `ts`. The stream ID supports replay without regenerating a completed stage. Backend event and snapshot shapes follow `models/schemas.py` and `api/index.py`; use these rather than assuming that every API response is identical to an example in `json_formats.md`.
 
-## Exchange and constraints
+The backend completes `BRIEF → PROPOSE → JUDGE → ANALYZE → FINAL → DECIDE → DONE` automatically. An optional pre-built `brief` skips brief extraction. The five proposals are learning inputs; their ratings inform seller analysis and exactly one final offer. The final `decision` is the buyer agent's own acceptance or rejection.
 
-The single-round flow is:
+## Human controls and persistence
 
-1. Serialize the buyer's selected looks and chat into context: `style`, preferred and avoided colors, `sizes`, `budget`, `occasion`, and `notes`.
-2. The seller provides exactly five distinct bundles with SKU references, image filenames, item totals, and bundle prices.
-3. The middleman checks the bundles against the contract and buyer constraints.
-4. The buyer returns one rating per bundle: `id`, `probability` between 0 and 1, and an item-specific `reason`.
-5. The seller analyzes the ratings and identifies useful and unsuitable attributes and SKUs.
-6. The seller returns exactly one final offer, including `savings` and `why`; the middleman checks it again.
-7. The buyer returns an `accept` or `reject` decision for that final offer.
+The five initial proposals and their ratings appear only in the collapsible Agent exchange log. Only the buyer sees Accept/Decline on the final offer; the seller waits for that choice. The human decision is stored separately from the backend agent decision and synchronizes between local tabs. No seller approval is required. The current API exposes no endpoints for those actions, seller rule settings, orders, payment, or inventory reservation. Human clicks must not overwrite the backend's automatic agent decision or claim a server-confirmed purchase. Seller preferences only influence a run if explicitly represented in its accepted buyer input or brief; there is no separate seller-settings API.
 
-The frontend's mock ratings describe purchase chance at the offered price. They are independent estimates rather than a distribution over five choices. Price, fit, and style scores are auxiliary display values, not replacements for contract `probability`. No calibrated model is producing these estimates in the demo.
+`localStorage` and `BroadcastChannel` synchronize the local UI between tabs/windows on the same browser profile and origin. They do not provide cross-device accounts or a hosted frontend database. The backend negotiation ID identifies server state; its persistence depends on the configured backend repository. Preset buyer/seller entry buttons provide no authentication.
 
-Sizes, budget, avoided colors, and explicit notes are hard rules. Offer variation comes from valid combinations and softer style, fabric, coverage, and price tradeoffs; it must not introduce wrong-size or over-budget offers. Only in-stock SKUs may appear. Item totals and savings are computed from catalog prices. Seller item and discount limits also apply.
+## Catalog and contract
 
-Replace the local simulation and progress timing with validated service responses at each stage. Keep the five-bundle ratings → seller analysis → one final offer sequence; accepting an initial bundle is not the final contract decision. Preserve the same agreed SKUs, sizes, and total in both workspaces.
+`src/data/backend-inventory.json` mirrors the 52-SKU source seed in `../db/seed_items.json`. It is a bundled snapshot, not a live database read: the API currently has no inventory endpoint. Deployed database inventory can differ, so the backend controls actual offer eligibility. Frontend item display must resolve returned SKU and image references without treating local stock as a live reservation.
 
-The current store only synchronizes tabs/windows sharing the same browser profile and origin. A backend integration will need a shared session identifier and server updates for separate devices or browser profiles. Preset role buttons provide no authenticated identity. The local JSON catalog and browser session do not provide server persistence, stock reservation, payment, or fulfillment.
+Inventory fields remain `sku`, `name`, `category`, `color`, `material`, `size`, `price`, `stock`, and `image`. Each size is a separate SKU. `image` stays a filename in messages and is resolved to an asset only for rendering. Presentation tags and photo mappings belong in `src/data/backend-product-meta.json`, separate from the wire inventory schema.
 
+Buyer input includes style choices and selected look descriptions, location, occasion, sizes, preferred fit, an optional target price, and the maximum budget. The backend extracts its brief from this input; target and fit are descriptive preferences rather than additional schema fields. Look options are filtered by the selected styles. Buyer context serializes style, colors, sizes, budget, occasion, and explicit notes. Budget, size, avoided colors, notes, stock, and price bands are backend validation rules. Initial offers differ through valid combinations and softer style, fabric, coverage, and price tradeoffs; wrong-size or over-budget offers are not deliberate alternatives.
+
+Backend ratings use a 0–1 `probability` for estimated purchase chance at the offered price. These estimates are independent and need not total 1; they are not calibrated measurements. Price, fit, and style scores are auxiliary explanations when returned by the backend. Item totals, savings, and attribute averages are computed by backend code.
+
+The frontend adapter must preserve backend IDs, SKUs, prices, and decisions when adapting them to display models. A network or validation failure should remain visible and retryable; it should not silently substitute seeded offers for server results. Successful frontend compilation or an available health route does not establish a successful end-to-end model run.

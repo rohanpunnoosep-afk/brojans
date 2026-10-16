@@ -6,7 +6,9 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "verify:catalog": "node --experimental-strip-types scripts/verify-catalog.ts"
+    "verify:catalog": "node --experimental-strip-types scripts/verify-catalog.ts",
+    "predev": "node scripts/sync-backend-inventory.mjs",
+    "prebuild": "node scripts/sync-backend-inventory.mjs"
   },
   "type": "module",
   "dependencies": {

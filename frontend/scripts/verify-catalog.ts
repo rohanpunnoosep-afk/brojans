@@ -1,82 +1,87 @@
+/** Fast, offline smoke of the actual backend adapter. No agent/model invocation. */
 import assert from 'node:assert/strict';
-import {existsSync} from 'node:fs';
-import {inventory, defaultProfile, productMeta, skuCatalog} from '../src/catalog.ts';
-import {initialOffers, buyerRatings, sellerAnalysis, finalOffer, buyerDecision, buyerContext} from '../src/negotiation.ts';
+import {existsSync,readFileSync} from 'node:fs';
+import {inventory,defaultProfile,imageUrl} from '../src/catalog.ts';
+import {buildFrontendRequest,displayBundle,displaySnapshot} from '../src/backend-adapter.ts';
+import {createNegotiation,getNegotiation} from '../src/api.ts';
+import type {BackendBundleProposal,BackendRating,BackendSnapshot,RawBundle} from '../src/backend-contracts.ts';
 
-const exactKeys = (value:object, expected:string[]) => assert.deepEqual(Object.keys(value).sort(), [...expected].sort());
-const inventoryKeys = ['sku','name','category','color','material','size','price','stock','image'];
-const bundleKeys = ['id','skus','images','items_total','price'];
-const ratingKeys = ['id','probability','reason'];
-const profile = {...defaultProfile, styles:['Casual','Athletic'], looks:['l1','l2','l3']};
-const rules = {maxItems:4, maxDiscount:15};
-
-assert.ok(inventory.length>=61,'Seller inventory retains the original size-specific SKUs');
-assert.equal(new Set(inventory.map(item=>item.sku)).size,inventory.length,'Inventory SKU IDs must be unique');
-assert.equal(skuCatalog.length,inventory.length);
-for (const item of inventory) {
- exactKeys(item,inventoryKeys);
- assert.ok(!/[\\/]/.test(item.image),'Wire images must be file names');
- assert.ok(existsSync(new URL('../public/images/'+item.image,import.meta.url)),`Missing image ${item.image}`);
- assert.ok(Object.values(productMeta).some(meta=>meta.skus.includes(item.sku)),`Missing metadata for ${item.sku}`);
+const exactKeys=(value:object,keys:string[])=>assert.deepEqual(Object.keys(value).sort(),[...keys].sort());
+const seed=JSON.parse(readFileSync(new URL('../../db/seed_items.json',import.meta.url),'utf8'));
+assert.deepEqual(inventory,seed,'Displayed inventory must exactly match the backend seed, including stock');
+assert.equal(inventory.length,52);
+assert.equal(new Set(inventory.map(item=>item.sku)).size,52);
+let mapped=0,placeholders=0;
+for(const item of inventory){
+ exactKeys(item,['sku','name','category','color','material','size','price','stock','image']);
+ assert.ok(!/[\\/]/.test(item.image),'Backend images are filenames');
+ const url=imageUrl(item.image);
+ if(url===null)placeholders++;
+ else{mapped++;assert.ok(existsSync(new URL('../public'+url,import.meta.url)),`Missing mapped image ${url}`);}
 }
+assert.ok(mapped>0&&placeholders>0,'Use real mapped images and explicit placeholders');
 
-const context=buyerContext(profile);
-assert.deepEqual(context.sizes,{top:'M',bottom:'M'});
-assert.deepEqual(context.notes,[]);
-assert.equal(context.budget,200);
+const request=buildFrontendRequest({...defaultProfile,styles:['Casual','Athletic'],looks:['l1','l2','l3']});
+exactKeys(request,['buyer_input']);
+const context=JSON.parse(request.buyer_input.slice(request.buyer_input.indexOf('{')));
+assert.deepEqual(context.sizes,{top:'M',bottom:'32',shoe:'10'});
+assert.equal(context.budget_dollars,200);
+assert.equal(context.location,'Los Angeles');
+assert.equal(context.selected_looks.length,3);
 
-const initial=initialOffers(profile,rules);
-assert.equal(initial.check.valid,true,initial.check.errors.join('\n'));
-assert.equal(initial.payload.bundles.length,5);
-assert.equal(new Set(initial.payload.bundles.map(bundle=>[...bundle.skus].sort().join('|'))).size,5);
-for (const bundle of initial.payload.bundles) {
- exactKeys(bundle,bundleKeys);
- bundle.skus.forEach((sku,index)=>{
-  const item=inventory.find(item=>item.sku===sku)!;
-  assert.ok(item.stock>0);
-  assert.equal(item.size,'M','Happy-path clothing must use the requested M SKU');
-  assert.equal(bundle.images[index],item.image);
- });
-}
+const selected=[
+ inventory.find(item=>item.category==='hoodie'&&item.size==='M'&&item.stock>0)!,
+ inventory.find(item=>item.category==='joggers'&&item.size==='32'&&item.stock>0)!,
+ inventory.find(item=>item.category==='tee'&&item.size==='M'&&item.stock>0)!,
+];
+assert.ok(selected.every(Boolean));
+const total=selected.reduce((sum,item)=>sum+item.price,0);
+const proposal:BackendBundleProposal={id:'actual-bundle-id',name:'Server bundle',skus:selected.map(item=>item.sku),images:selected.map(item=>item.image),items_total:total,price:Math.round(total*.9),pitch:'The seller pitch from the API.'};
+const rating:BackendRating={id:proposal.id,probability:.71,reason:'The actual buyer judgment.',price_score:.8,fit_score:.9,style_score:.7};
+const unjudged=displayBundle(proposal);
+assert.deepEqual(unjudged.scores,{price:null,fit:null,style:null});
+assert.equal(unjudged.probability,null);
+const judged=displayBundle(proposal,rating);
+assert.deepEqual(judged.scores,{price:80,fit:90,style:70});
+assert.equal(judged.probability,.71);
+assert.equal(judged.reason,rating.reason);
+assert.equal(judged.price,proposal.price);
 
-const ratings=buyerRatings(initial.bundles);
-exactKeys(ratings,['ratings']);
-assert.equal(ratings.ratings.length,5);
-for (const rating of ratings.ratings) {
- exactKeys(rating,ratingKeys);
- assert.ok(rating.probability>=0&&rating.probability<=1);
- assert.ok(initial.payload.bundles.some(bundle=>bundle.id===rating.id));
- assert.ok(rating.reason.length>0);
-}
+const raw:RawBundle={id:proposal.id,negotiation_id:'actual-negotiation-id',round:1,name:proposal.name,skus:proposal.skus,price:proposal.price,pitch:proposal.pitch};
+const snapshot:BackendSnapshot={
+ negotiation:{id:raw.negotiation_id,status:'done',step:'DONE',brief:null,error:null},
+ rounds:[{round:1,bundles:[{...raw,judgment:{bundle_id:raw.id,negotiation_id:raw.negotiation_id,round:1,probability:.71,reason:rating.reason,price_score:.8,fit_score:.9,style_score:.7}}],heat:[],analysis:null}],
+ final_offer:{...raw,id:'actual-final-id',round:2},
+ decision:{decision:'accept',probability:.82,reason:'The final buyer-agent decision.'},
+};
+const recovered=displaySnapshot(snapshot);
+assert.deepEqual(recovered.bundles[0].images,proposal.images);
+assert.equal(recovered.bundles[0].items_total,total);
+assert.deepEqual(recovered.bundles[0].scores,judged.scores);
+assert.equal(recovered.ratings[0].id,raw.id);
+assert.equal(recovered.finalOffer!.reason,raw.pitch);
+assert.equal(recovered.finalOffer!.probability,.82);
+assert.deepEqual(recovered.finalOffer!.scores,{price:null,fit:null,style:null});
+assert.equal(recovered.decision!.decision,'accept');
+const unknown=displaySnapshot({...snapshot,final_offer:{...raw,id:'unknown-final',round:2,skus:['UNKNOWN-SKU']}});
+assert.equal(unknown.finalOffer!.items_total,null,'Unknown SKU totals must remain unavailable');
+assert.deepEqual(unknown.finalOffer!.images,['']);
 
-const analysis=sellerAnalysis(initial.bundles,ratings);
-exactKeys(analysis,['avg','attribute_avgs','item_checks','works','fails','keep_skus','drop_skus','main_issue']);
-const computedMean=ratings.ratings.reduce((sum,rating)=>sum+rating.probability,0)/5;
-assert.ok(Math.abs(analysis.avg-computedMean)<1e-12,'Analysis average must be computed from actual ratings');
-for (const [color,average] of Object.entries(analysis.attribute_avgs.color)) {
- const containing=initial.bundles.filter(bundle=>bundle.skus.some(sku=>inventory.find(item=>item.sku===sku)!.color===color));
- const expected=containing.reduce((sum,bundle)=>sum+ratings.ratings.find(rating=>rating.id===bundle.id)!.probability,0)/containing.length;
- assert.ok(Math.abs(average-expected)<1e-12,`Color average must be computed from bundles containing ${color}`);
-}
+const originalFetch=globalThis.fetch;
+const calls:{url:string;method:string}[]=[];
+globalThis.fetch=async(input,options)=>{
+ const url=String(input);calls.push({url,method:options?.method||'GET'});
+ assert.ok(url.startsWith('/api/'));
+ if(options?.method==='POST'){
+  assert.equal(JSON.parse(String(options.body)).buyer_input,request.buyer_input);
+  return new Response(JSON.stringify({id:raw.negotiation_id,stream_url:`/api/negotiations/${raw.negotiation_id}/stream`}),{status:201});
+ }
+ return new Response(JSON.stringify(snapshot),{status:200});
+};
+try{
+ assert.equal((await createNegotiation(request)).id,raw.negotiation_id);
+ assert.equal((await getNegotiation(raw.negotiation_id)).final_offer!.id,'actual-final-id');
+ assert.deepEqual(calls.map(call=>call.method),['POST','GET']);
+}finally{globalThis.fetch=originalFetch;}
 
-const final=finalOffer(profile,rules,initial.bundles,ratings,analysis);
-assert.equal(final.check.valid,true,final.check.errors.join('\n'));
-exactKeys(final.payload,['final']);
-exactKeys(final.payload.final,[...bundleKeys,'savings','why']);
-assert.equal(final.payload.final.id,'final');
-assert.equal(final.payload.final.price,149);
-assert.equal(final.payload.final.savings,final.payload.final.items_total-final.payload.final.price);
-for (const sku of final.payload.final.skus) {
- assert.ok(analysis.keep_skus.includes(sku),'Final offer must use retained SKUs');
- assert.ok(!analysis.drop_skus.includes(sku),'Final offer must exclude dropped SKUs');
- assert.equal(inventory.find(item=>item.sku===sku)!.size,'M');
-}
-
-const decision=buyerDecision(final.bundle,true);
-exactKeys(decision,['decision','probability','reason']);
-assert.equal(decision.decision,'accept');
-assert.ok(decision.probability>=0&&decision.probability<=1);
-assert.ok(decision.reason.length>0);
-
-console.log(`Happy-path contract smoke passed: ${inventory.length} inventory SKUs, five valid offers, ratings, analysis, one valid $${final.payload.final.price} final offer, and accept decision.`);
-
+console.log(`Backend contract smoke passed: ${inventory.length} real seed SKUs (${mapped} mapped images, ${placeholders} placeholders), actual M/32/10 buyer request, nullable/display scores, snapshot judgments, unknown-SKU handling, and mocked API POST/GET.`);

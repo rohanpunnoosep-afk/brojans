@@ -1,0 +1,426 @@
+{
+  "JKT-01-BR": {
+    "skus": [
+      "JKT-01-BR-M",
+      "JKT-01-BR-L"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "Jackets",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "JKT-02-OL": {
+    "skus": [
+      "JKT-02-OL-M",
+      "JKT-02-OL-L"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "Jackets",
+    "sourceAsset": "olive-overshirt.jpg",
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "JKT-03-NV": {
+    "skus": [
+      "JKT-03-NV-M",
+      "JKT-03-NV-L"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Streetwear",
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "Jackets",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "JKT-04-NY": {
+    "skus": [
+      "JKT-04-NY-M",
+      "JKT-04-NY-L"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Athletic"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "Jackets",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "BLZ-01-NV": {
+    "skus": [
+      "BLZ-01-NV-M",
+      "BLZ-01-NV-L"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Business casual",
+      "Formal"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "Jackets",
+    "sourceAsset": "blazer.jpg",
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "TEE-01-OL": {
+    "skus": [
+      "TEE-01-OL-M",
+      "TEE-01-OL-L"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "T-shirts",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "TEE-02-WH": {
+    "skus": [
+      "TEE-02-WH-M",
+      "TEE-02-WH-L"
+    ],
+    "fit": "Boxy",
+    "styles": [
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "T-shirts",
+    "sourceAsset": "white-tee.jpg",
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "TEE-03-SG": {
+    "skus": [
+      "TEE-03-SG-M",
+      "TEE-03-SG-L"
+    ],
+    "fit": "Relaxed",
+    "styles": [
+      "Casual",
+      "Athletic",
+      "Loungewear"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "T-shirts",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "TEE-04-GR": {
+    "skus": [
+      "TEE-04-GR-M",
+      "TEE-04-GR-L"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Athletic"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "T-shirts",
+    "sourceAsset": "slate-tee.jpg",
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "SHT-01-BL": {
+    "skus": [
+      "SHT-01-BL-M",
+      "SHT-01-BL-L"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Business casual",
+      "Formal"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "Shirts",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "HOD-01-NG": {
+    "skus": [
+      "HOD-01-NG-M",
+      "HOD-01-NG-L"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Streetwear",
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "Hoodies",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "HOD-02-HG": {
+    "skus": [
+      "HOD-02-HG-M",
+      "HOD-02-HG-L"
+    ],
+    "fit": "Relaxed",
+    "styles": [
+      "Casual",
+      "Athletic",
+      "Loungewear"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "Hoodies",
+    "sourceAsset": "hoodie.jpg",
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "SWT-01-OT": {
+    "skus": [
+      "SWT-01-OT-M",
+      "SWT-01-OT-L"
+    ],
+    "fit": "Relaxed",
+    "styles": [
+      "Casual",
+      "Athletic",
+      "Loungewear"
+    ],
+    "gender": "Menswear",
+    "group": "top",
+    "displayCategory": "Sweatshirts",
+    "sourceAsset": "sand-crew.jpg",
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "PNT-01-OL": {
+    "skus": [
+      "PNT-01-OL-32",
+      "PNT-01-OL-34"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Streetwear",
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "bottom",
+    "displayCategory": "Pants",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "JNS-01-IN": {
+    "skus": [
+      "JNS-01-IN-32",
+      "JNS-01-IN-34"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "bottom",
+    "displayCategory": "Pants",
+    "sourceAsset": "jeans.jpg",
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "JNS-02-BK": {
+    "skus": [
+      "JNS-02-BK-32",
+      "JNS-02-BK-34"
+    ],
+    "fit": "Slim",
+    "styles": [
+      "Streetwear",
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "bottom",
+    "displayCategory": "Pants",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "TRS-01-GR": {
+    "skus": [
+      "TRS-01-GR-32",
+      "TRS-01-GR-34"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Business casual",
+      "Formal"
+    ],
+    "gender": "Menswear",
+    "group": "bottom",
+    "displayCategory": "Pants",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "JOG-01-CH": {
+    "skus": [
+      "JOG-01-CH-32",
+      "JOG-01-CH-34"
+    ],
+    "fit": "Tapered",
+    "styles": [
+      "Casual",
+      "Athletic",
+      "Loungewear"
+    ],
+    "gender": "Menswear",
+    "group": "bottom",
+    "displayCategory": "Pants",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "SHO-01-BK": {
+    "skus": [
+      "SHO-01-BK-32",
+      "SHO-01-BK-34"
+    ],
+    "fit": "Relaxed",
+    "styles": [
+      "Casual",
+      "Athletic",
+      "Loungewear"
+    ],
+    "gender": "Menswear",
+    "group": "bottom",
+    "displayCategory": "Shorts",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "SHO-02-NV": {
+    "skus": [
+      "SHO-02-NV-32",
+      "SHO-02-NV-34"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Athletic"
+    ],
+    "gender": "Menswear",
+    "group": "bottom",
+    "displayCategory": "Shorts",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "BOT-01-BR": {
+    "skus": [
+      "BOT-01-BR-10",
+      "BOT-01-BR-11"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "shoe",
+    "displayCategory": "Footwear",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "SNK-01-WH": {
+    "skus": [
+      "SNK-01-WH-10",
+      "SNK-01-WH-11"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "shoe",
+    "displayCategory": "Footwear",
+    "sourceAsset": "white-sneaker.jpg",
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "SNK-02-GO": {
+    "skus": [
+      "SNK-02-GO-10",
+      "SNK-02-GO-11"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Athletic"
+    ],
+    "gender": "Menswear",
+    "group": "shoe",
+    "displayCategory": "Footwear",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "LOF-01-BK": {
+    "skus": [
+      "LOF-01-BK-10",
+      "LOF-01-BK-11"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Business casual",
+      "Formal"
+    ],
+    "gender": "Menswear",
+    "group": "shoe",
+    "displayCategory": "Footwear",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "SLD-01-BK": {
+    "skus": [
+      "SLD-01-BK-10",
+      "SLD-01-BK-11"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Casual",
+      "Athletic",
+      "Loungewear"
+    ],
+    "gender": "Menswear",
+    "group": "shoe",
+    "displayCategory": "Footwear",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "BNE-01-RU": {
+    "skus": [
+      "BNE-01-RU-OS"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Casual"
+    ],
+    "gender": "Menswear",
+    "group": "accessory",
+    "displayCategory": "Accessories",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  },
+  "BLT-01-DB": {
+    "skus": [
+      "BLT-01-DB-OS"
+    ],
+    "fit": "Regular",
+    "styles": [
+      "Business casual",
+      "Formal"
+    ],
+    "gender": "Menswear",
+    "group": "accessory",
+    "displayCategory": "Accessories",
+    "sourceAsset": null,
+    "presentationSource": "Inferred from backend item name/category for display only; not backend attributes."
+  }
+}

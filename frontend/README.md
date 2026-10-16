@@ -1,36 +1,38 @@
 # Tandem frontend
 
-TANDEM is a happy-path menswear marketplace demo with separate buyer and seller workspaces. The buyer selects Casual and Athletic, saves three lounge-inspired looks, and answers a short context chat. The seller reviews prepopulated inventory and sets item and discount limits.
+TANDEM is a menswear marketplace with separate buyer and seller workspaces. The buyer selects Casual and Athletic, saves three lounge-inspired looks, and answers a short context chat. The frontend sends that brief to the existing middleman API and displays its five initial bundles, buyer ratings, seller analysis, final offer, and automatic agent decision.
 
-The simulated exchange follows the repository's [JSON contract](../json_formats.md): buyer context → five seller bundles → buyer ratings → seller analysis → one final offer → buyer decision. The five initial bundles provide different combinations, prices, fabrics, and style directions for the seller to learn from. They are not five checkout choices. The final offer aims for approximately $150 and must respect the buyer's budget and sizes.
+## Run locally
 
-## Run
-
-From this folder, with Node.js 22.12 or newer:
+From `frontend/`, with Node.js 22.12 or newer:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open `?role=buyer` and `?role=seller` in two tabs or windows of the same browser, origin, and profile. **Reset demo** clears both workspaces. Default buyer preferences are Los Angeles, medium tops and bottoms, relaxed fit, and a $200 budget. Budget and sizes become hard constraints in the serialized buyer context; over-budget or wrong-size bundles are not offered.
+The backend must also be running. Follow the repository [backend setup](../README.md) to start FastAPI on port 8000 with its required configuration. Vite proxies browser requests to `/api` to `http://127.0.0.1:8000`, preserving the API path and SSE stream. To use a different local or deployed backend, copy `.env.example` to `.env.local`, set `TANDEM_BACKEND_URL` to its origin, and restart Vite. This setting stays in the development server; it is not a `VITE_*` client variable. Keep model and database credentials in the backend environment.
 
-## Catalog and scoring
+Open `?role=buyer` and `?role=seller` in two tabs or windows of the same browser profile and origin. **Reset demo** clears the local workspaces. The shared browser session uses `localStorage` and `BroadcastChannel`; the backend stores negotiation state through its own configured repository.
 
-`src/data/inventory.json` is the canonical seeded seller catalog, with one record per size-specific SKU using the exact inventory fields in `json_formats.md`. Each size is a separate SKU, and each item's `image` contains a filename rather than a URL. The frontend resolves those filenames to image assets. Presentation tags such as fit, style, and menswear grouping live separately in `src/data/product-meta.json`; they do not add fields to the wire inventory schema.
+## Backend behavior and UI controls
 
-Mock buyer ratings use the contract's `probability` from 0 to 1: an illustrative chance of buying that bundle at that price. These are preset demo estimates, not calibrated predictions from a model, and they do not need to sum to 1. The visible price, fit, and style scores are auxiliary explanations; they are separate from the purchase-probability field. The seller analysis uses the ratings to explain what to keep or drop before proposing one final offer.
+Creating a negotiation and opening its SSE stream runs the backend's full sequence: `BRIEF → PROPOSE → JUDGE → ANALYZE → FINAL → DECIDE → DONE`. Five initial bundles are rated before the seller creates one final offer. The backend agent's acceptance or rejection arrives automatically; it does not wait for a person to press an Accept button.
+
+Only the buyer sees Accept/Decline on the final offer. The choice is saved locally and shared with the seller tab; it does not replace the backend agent decision. Initial proposals and ratings appear in the collapsible Agent exchange log. Seller limits are read-only references to backend rules. The current backend has no endpoint to save seller rules, approve a selected bundle, submit a human purchase decision, or place an order. Local human actions must not be interpreted as server-side approvals or purchases.
+
+Ratings use the backend's `probability` from 0 to 1: an estimated chance of buying a bundle at that price. They do not need to sum to 1. Price, fit, and style scores are auxiliary display values. Budget, sizes, avoided colors, and explicit notes are validated by the backend; wrong-size and over-budget offers are not intentional alternatives.
+
+## Catalog
+
+`src/data/inventory.json` is a frontend snapshot of the 52-SKU backend seed in `../db/seed_items.json`. Each size is a separate SKU, using the exact inventory fields in [`json_formats.md`](../json_formats.md). Each `image` value is a filename resolved by the frontend; presentation metadata stays in `src/data/product-meta.json`.
+
+There is no live inventory endpoint. This snapshot supports inventory browsing and product display; it does not prove that deployed database stock matches the seed. The backend remains authoritative for eligibility and pricing. Photography is illustrative; see `ASSET-CREDITS.md`.
 
 ## Deploy on Vercel
 
-Set the Vercel project's **Root Directory** to `frontend`, use the Vite preset, build with `npm run build`, and serve `dist`. This folder's `vercel.json` contains the standalone frontend configuration. The repository's existing root configuration and backend files are unchanged.
+For the integrated app, set the Vercel project's **Root Directory to the repository root**, not `frontend`. The existing root `vercel.json` installs and builds this folder, serves `frontend/dist`, and routes `/api/*` to `api/index.py`. Browser API calls stay on the same origin. Configure backend environment variables in that Vercel project as described in the root README.
 
-The optional `deployment/vercel.integrated.json` is a future combined-deployment template; it is not active and does not replace the root configuration.
+`frontend/vercel.json` is only for a separate frontend-only preview. It does not deploy the sibling Python API, and its exclusion of `/api` from the SPA fallback does not create an API proxy. `deployment/vercel.integrated.json` is an archived configuration reference; the root file is authoritative and already contains the combined settings.
 
-## Demo boundaries
-
-Agent activity, ratings, and analysis are simulated locally. `localStorage` and `BroadcastChannel` synchronize the workspaces on the same browser profile and origin. The JSON catalog is a local data file, not a hosted database. No buyer, seller, middleman, or model API is connected by this frontend.
-
-There is no authentication, payment, shipment, or live calendar/email/weather connection. Preset role buttons enter demo accounts. Catalog prices, tags, and stock are demo data; product photography is illustrative. See `ASSET-CREDITS.md` for sources and `FRONTEND-INTEGRATION.md` for the backend handoff.
-
-
+The frontend provides no authentication, payments, shipping, or live calendar/email/weather connection. Preset role buttons enter local accounts. See `FRONTEND-INTEGRATION.md` for API boundaries and deployment details.
